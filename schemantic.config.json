@@ -1,0 +1,20 @@
+{
+  "generateTypes": true,
+  "generateApiClient": true,
+  "generateHooks": true,
+  "generateQueries": false,
+  "useStrictTypes": true,
+  "useOptionalChaining": true,
+  "useNullishCoalescing": true,
+  "namingConvention": "camelCase",
+  "preserveComments": true,
+  "generateIndexFile": true,
+  "schemaUrl": "http://localhost:8000/openapi.json",
+  "outputDir": "src/lib/api",
+  "typePrefix": "",
+  "typeSuffix": "",
+  "plugins": [
+    { "name": "jsdoc", "enabled": true },
+    { "name": "zod-validation", "enabled": true }
+  ]
+}
