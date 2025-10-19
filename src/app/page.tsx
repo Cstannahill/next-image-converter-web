@@ -35,10 +35,14 @@ import {
   createApiHooks,
 } from "../lib/api";
 import { ImageFormat } from "../lib/api/types";
+import { set } from "zod";
 
 // Default to the server-side proxy so client requests don't contain secrets.
 // Can be overridden in env with NEXT_PUBLIC_API_BASE_URL for special cases.
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/proxy";
+// If the env value accidentally contains the backend host (e.g. http://localhost:8000/api/proxy),
+// prefer the relative path portion so the browser will call our frontend proxy instead of the backend directly.
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+
 
 export default function HomePage() {
   const client = useMemo(() => new ImageManipulationApiClient({ baseUrl: API_BASE }), []);
@@ -113,6 +117,7 @@ export default function HomePage() {
       setResultBlob(result.blob);
       setResultName(result.filename);
       setProgress(100);
+      setIsProcessing(false);
       toast.success("Conversion complete");
     } catch (err) {
       console.error(err);
@@ -197,7 +202,7 @@ export default function HomePage() {
                       <div className="flex-1" />
                       <div className="w-40">
                         <Button className="w-full" onClick={submit} disabled={isProcessing || convertMutation.loading || batchMutation.loading}>
-                          {isProcessing || convertMutation.loading || batchMutation.loading || progress > 0 ? (
+                          {isProcessing || convertMutation.loading || batchMutation.loading || progress > 0 && progress < 100 ? (
                             <span className="flex items-center justify-center gap-2">
                               <Spinner /> <span>Converting</span>
                             </span>

@@ -1,4 +1,8 @@
-declare module "*.css";
-declare module "*.scss";
-declare module "*.module.css";
-declare module "*.module.scss";
+declare global {
+  interface RequestInit {
+    duplex?: "half" | "full";
+  }
+  declare module "*.css";
+}
+
+export {};
