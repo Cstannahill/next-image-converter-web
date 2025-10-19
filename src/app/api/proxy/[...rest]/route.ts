@@ -30,6 +30,27 @@ export async function PATCH(req: NextRequest) {
   return await handle(req);
 }
 
+// Handle CORS preflight
+export async function OPTIONS(req: NextRequest) {
+  // Build CORS headers from env with sensible defaults
+  const allowOrigins = process.env.ALLOW_ORIGINS ?? "*";
+  const allowCredentials = process.env.ALLOW_CREDENTIALS ?? "false";
+  const allowMethods =
+    process.env.ALLOW_METHODS ?? "GET,POST,PUT,PATCH,DELETE,OPTIONS";
+  const allowHeaders = process.env.ALLOW_HEADERS ?? "*";
+
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Origin": allowOrigins,
+    "Access-Control-Allow-Credentials": allowCredentials,
+    "Access-Control-Allow-Methods": allowMethods,
+    "Access-Control-Allow-Headers": allowHeaders,
+    // Allow caching of preflight for 1 hour
+    "Access-Control-Max-Age": "3600",
+  };
+
+  return new NextResponse(null, { status: 204, headers });
+}
+
 async function handle(req: NextRequest) {
   const path = req.nextUrl.pathname.replace(/^\/api\/proxy/, "");
   const backendBase =
@@ -68,6 +89,15 @@ async function handle(req: NextRequest) {
     res.headers.forEach((value, key) => {
       if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase())) headers.set(key, value);
     });
+
+    // Attach CORS response headers so browser clients receive them
+    const allowOrigins = process.env.ALLOW_ORIGINS ?? "*";
+    const allowCredentials = process.env.ALLOW_CREDENTIALS ?? "false";
+    const exposeHeaders =
+      process.env.EXPOSE_HEADERS ?? "Content-Disposition,Content-Type";
+    headers.set("Access-Control-Allow-Origin", allowOrigins);
+    headers.set("Access-Control-Allow-Credentials", allowCredentials);
+    headers.set("Access-Control-Expose-Headers", exposeHeaders);
 
     const arrayBuffer = await res.arrayBuffer();
     return new NextResponse(arrayBuffer, {
