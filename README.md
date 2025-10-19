@@ -34,3 +34,16 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Using a server-side proxy for API key security
+
+To keep your backend API key secret, deploy a server-side proxy (already included at `src/app/api/proxy/[...rest]/route.ts`) and set the server-only environment variable in Vercel:
+
+1. Go to your Vercel project dashboard → Settings → Environment Variables.
+2. Add a variable named `API_KEY` with the secret value (set to Production/Preview/Development as appropriate).
+3. Ensure your frontend uses the proxy path (for example, set `NEXT_PUBLIC_API_BASE_URL` to `/api/proxy` in your Vercel env vars or in `.env` during local development).
+
+Notes:
+
+- `API_KEY` is only available server-side. The proxy injects `X-API-Key` into outbound requests to the backend so the key is never exposed to browsers.
+- If you need to call the backend directly from the browser, you must not store the secret key in a client-visible env var (`NEXT_PUBLIC_...`) because it will be embedded in the build.

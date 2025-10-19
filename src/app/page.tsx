@@ -36,7 +36,9 @@ import {
 } from "../lib/api";
 import { ImageFormat } from "../lib/api/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+// Default to the server-side proxy so client requests don't contain secrets.
+// Can be overridden in env with NEXT_PUBLIC_API_BASE_URL for special cases.
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/proxy";
 
 export default function HomePage() {
   const client = useMemo(() => new ImageManipulationApiClient({ baseUrl: API_BASE }), []);

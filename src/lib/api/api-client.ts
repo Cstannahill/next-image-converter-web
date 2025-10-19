@@ -47,14 +47,10 @@ export class ImageManipulationApiClient {
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, "");
-    // Read API key from env. Prefer NEXT_PUBLIC_ for client visibility, fallback to API_KEY
-    const envApiKey =
-      typeof process !== "undefined"
-        ? process.env.NEXT_PUBLIC_API_KEY ?? process.env.API_KEY
-        : undefined;
+    // Do NOT read or inject API key from process.env here.
+    // API keys must remain server-side and be injected by the server proxy.
     const defaultHeaders: Record<string, string> = {
       ...(config.headers || {}),
-      ...(envApiKey ? { "X-API-Key": envApiKey } : {}),
     };
 
     this.config = {
