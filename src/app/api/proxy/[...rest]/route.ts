@@ -87,6 +87,9 @@ async function handle(req: NextRequest) {
   req.headers.forEach((value, key) => {
     if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase())) outHeaders[key] = value;
   });
+  // Remove Host and Content-Length so backend sees a clean request
+  delete outHeaders["host"];
+  delete outHeaders["content-length"];
 
   // Inject server-side API key (server-only env)
   if (process.env.API_KEY) {
@@ -99,6 +102,18 @@ async function handle(req: NextRequest) {
     : await req.arrayBuffer();
 
   try {
+    // Debugging: print target and presence of API_KEY when not in production
+    if (process.env.NODE_ENV !== "production") {
+      // Do not log secrets
+      // eslint-disable-next-line no-console
+      console.debug(
+        "[proxy] forwarding to",
+        target,
+        "API_KEY_present=",
+        !!process.env.API_KEY
+      );
+    }
+
     const res = await fetch(target, {
       method: req.method,
       headers: outHeaders,
@@ -126,6 +141,21 @@ async function handle(req: NextRequest) {
     headers.set("Access-Control-Expose-Headers", exposeHeaders);
     // Signal that responses may vary by Origin when we echo it
     headers.set("Vary", "Origin");
+
+    // If backend returned non-OK, provide additional debug logging to server logs (local only)
+    if (process.env.NODE_ENV !== "production" && !res.ok) {
+      try {
+        const text = await res.clone().text();
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[proxy] backend response:",
+          res.status,
+          text.slice(0, 2000)
+        );
+      } catch (e) {
+        // ignore
+      }
+    }
 
     const arrayBuffer = await res.arrayBuffer();
     return new NextResponse(arrayBuffer, {
